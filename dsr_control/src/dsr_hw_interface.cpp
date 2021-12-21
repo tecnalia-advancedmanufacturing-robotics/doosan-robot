@@ -1006,7 +1006,7 @@ namespace dsr_control{
         LPROBOT_POSE pose = Drfl.GetCurrentPose();
         for(int i = 0; i < NUM_JOINT; i++){
             ROS_DEBUG("[DRHWInterface::read] %d-pos: %7.3f", i, pose->_fPosition[i]);
-            joints[i].pos = deg2rad(pose->_fPosition[i]);	//update pos to Rviz
+            joints[i].pos = deg2rad(pose->_fPosition[i]);	//update pos to Rviz - i think they mean /joint_states, and this is rad already.
             msg.data.push_back(joints[i].pos);
         }
         if(m_strRobotGripper != "none"){
@@ -1014,6 +1014,7 @@ namespace dsr_control{
         }
         m_PubtoGazebo.publish(msg);
     }
+    
     void DRHWInterface::write(ros::Duration& elapsed_time)
     {
         //ROS_INFO("DRHWInterface::write()");
@@ -1063,7 +1064,9 @@ namespace dsr_control{
         ROS_INFO("callback: Position received");
         std::array<float, NUM_JOINT> target_pos;
         std::copy(msg->data.cbegin(), msg->data.cend(), target_pos.begin());
-        Drfl.amovej(target_pos.data(), 50, 50);
+        for(int i=0; i<NUM_JOINT; i++)
+            target_pos[i]*=180.0/3.141592653589; //to degrees for their driver
+        Drfl.amovej(target_pos.data(), 100, 100);   //TODO: check the blend type and choose the one for realtime control.
     }
 
     void DRHWInterface::jogCallback(const dsr_msgs::JogMultiAxis::ConstPtr& msg){

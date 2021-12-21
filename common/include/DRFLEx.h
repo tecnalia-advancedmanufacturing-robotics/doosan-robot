@@ -121,7 +121,7 @@ namespace DRAFramework
         DRFL_API bool _speedj_rt(LPROBOTCONTROL pCtrl, float fTargetVel[NUM_JOINT], float fTargetAcc[NUM_JOINT], float fTargetTime);
         DRFL_API bool _speedl_rt(LPROBOTCONTROL pCtrl, float fTargetVel[NUM_TASK], float fTargetAcc[NUM_TASK], float fTargetTime);
         DRFL_API bool _torque_rt(LPROBOTCONTROL pCtrl, float fMotorTor[NUM_JOINT], float fTargetTime);
-        //DRFL_API bool _change_operation_speed_rt(LPROBOTCONTROL pCtrl, float fSpeedRate); // Â÷ÈÄ °³¹ß
+        //DRFL_API bool _change_operation_speed_rt(LPROBOTCONTROL pCtrl, float fSpeedRate); // ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½
 
 
         ////////////////////////////////////////////////////////////////////////////
@@ -497,7 +497,7 @@ namespace DRAFramework
         bool speedj_rt(float fTargetVel[NUM_JOINT], float fTargetAcc[NUM_JOINT], float fTargetTime){ return _speedj_rt(_rbtCtrl, fTargetVel, fTargetAcc, fTargetTime); };
         bool speedl_rt(float fTargetVel[NUM_TASK], float fTargetAcc[NUM_TASK], float fTargetTime){ return _speedl_rt(_rbtCtrl, fTargetVel, fTargetAcc, fTargetTime); };
         bool torque_rt(float fMotorTor[NUM_JOINT], float fTargetTime){ return _torque_rt(_rbtCtrl, fMotorTor, fTargetTime); };
-        //bool change_operation_speed_rt(float fSpeedRate){ return _change_operation_speed_rt(_rbtCtrl, fSpeedRate); }; //Â÷ÈÄ °³¹ß
+        //bool change_operation_speed_rt(float fSpeedRate){ return _change_operation_speed_rt(_rbtCtrl, fSpeedRate); }; //ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½
 
 
         ////////////////////////////////////////////////////////////////////////////
@@ -623,7 +623,7 @@ namespace DRAFramework
         DRL_PROGRAM_STATE get_program_state() { return _get_program_state(_rbtCtrl); };
 
         // set safe-stop reset type
-        bool set_safe_stop_reset_type(SAFE_STOP_RESET_TYPE eResetType = SAFE_STOP_RESET_TYPE_DEFAULT) { _set_safe_stop_reset_type(_rbtCtrl, eResetType); }
+        bool set_safe_stop_reset_type(SAFE_STOP_RESET_TYPE eResetType = SAFE_STOP_RESET_TYPE_DEFAULT) { return(_set_safe_stop_reset_type(_rbtCtrl, eResetType)); }
 
         // get roobot system alarm
         LPLOG_ALARM get_last_alarm() { return _get_last_alarm(_rbtCtrl); };
