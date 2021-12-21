@@ -725,11 +725,11 @@ namespace dsr_control{
         ///m_PubJogMultiAxis = private_nh_.advertise<dsr_msgs::JogMultiAxis>("jog_multi",100);
 
         // gazebo에 joint position 전달
-        m_PubtoGazebo = private_nh_.advertise<std_msgs::Float64MultiArray>("/dsr_joint_position_controller/command",10);
+        m_PubtoGazebo = private_nh_.advertise<std_msgs::Float64MultiArray>("/dsr_joint_position_controller/command",1);
         // moveit의 trajectory/goal를 받아 제어기로 전달
         m_sub_joint_trajectory = private_nh_.subscribe("dsr_joint_trajectory_controller/follow_joint_trajectory/goal", 10, &DRHWInterface::trajectoryCallback, this);
         // topic echo 명령으로 제어기에 전달
-        m_sub_joint_position = private_nh_.subscribe("dsr_joint_position_controller/command", 10, &DRHWInterface::positionCallback, this);
+        m_sub_joint_position = private_nh_.subscribe("dsr_joint_position_controller/command", 1, &DRHWInterface::positionCallback, this);
         
         ros::NodeHandle nh_temp;
         m_SubSerialRead = nh_temp.subscribe("serial_read", 100, &Serial_comm::read_callback, &ser_comm);
@@ -1066,7 +1066,9 @@ namespace dsr_control{
         std::copy(msg->data.cbegin(), msg->data.cend(), target_pos.begin());
         for(int i=0; i<NUM_JOINT; i++)
             target_pos[i]*=180.0/3.141592653589; //to degrees for their driver
-        Drfl.amovej(target_pos.data(), 100, 100);   //TODO: check the blend type and choose the one for realtime control.
+
+        //speed and accel are in deg/s and deg/s/s, because of course they are.
+        Drfl.amovej(target_pos.data(), 180.0, 360.0, 0.0, MOVE_MODE_ABSOLUTE, BLENDING_SPEED_TYPE_OVERRIDE);  //override is covered on doosan programming manual 2.8/2.1 pp64
     }
 
     void DRHWInterface::jogCallback(const dsr_msgs::JogMultiAxis::ConstPtr& msg){

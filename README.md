@@ -1,11 +1,12 @@
 # bryan has made some changes:
 - shebangin' on that python3 the way the ubuntu gods intended
 - fake roscontrol interface in radians
-- watch out for the emulator not coming up fast enough for the driver to connect to it, get around that by running it a priori: `rosrun common run_DRCF.sh`
 - deleted a wayward cmakelists in the root that called the roskinetic catkin cmake...? colcon wouldnt build it so I got rid of it.
 - fixed a missing return in drflex.h
+- reduced publisher and subscriber buffering to 1 message in /command topics.
 
 # bryan other notes
+- Watch out for the emulator not coming up fast enough for the driver to connect to it, get around that by running it a priori: `rosrun common run_DRCF.sh`
 - I didnt really read too hard when I converted the command to radians, so it could break other services.That's a future bryan problem.
 - Ros control interface is faked for commands:   
   dsr_hw_interface.cpp does this on line 732:   
@@ -17,7 +18,8 @@
 # bryan #TODOs
 - catkin_python_setup() for their common/imp libraries (as opposed to the nightmare that is relative imports):   
   `sys.path.append( os.path.abspath(os.path.join(os.path.dirname(__file__),"../../../../common/imp")) ) # get import path : DSR_ROBOT.py `
-
+- write a velocity interface using a horizon method and amovej's ability to take lists of joint velocities
+    though it looks like amovej cant take a list at all, drflex.h line 6568. time to lodge a complaint.
 
 
 # [Doosan Robotics](http://www.doosanrobotics.com/kr/)
