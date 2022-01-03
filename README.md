@@ -6,7 +6,7 @@
 - reduced publisher and subscriber buffering to 1 message in /command topics.
 
 # bryan other notes
-- Watch out for the emulator not coming up fast enough for the driver to connect to it, get around that by running it a priori: `rosrun common run_DRCF.sh`
+- Watch out for the emulator not coming up fast enough for the driver to connect to it, get around that by running it a priori: `rosrun common run_dcrf_noetic.sh`
 - I didnt really read too hard when I converted the command to radians, so it could break other services.That's a future bryan problem.
 - Ros control interface is faked for commands:   
   dsr_hw_interface.cpp does this on line 732:   
