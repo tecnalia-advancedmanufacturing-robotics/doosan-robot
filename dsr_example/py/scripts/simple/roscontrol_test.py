@@ -5,6 +5,7 @@ from sensor_msgs.msg import JointState
 from copy import copy
 from math import sin
 
+rate=10
 # works with the default example only because I'm not dragging in their libraries to try and parameterize this.
 
 jscb_count=0
@@ -18,9 +19,11 @@ def jointstatecallback(msg: JointState):
 # ROS boilerplate
 print("Setting up node roscontrol_test, I will wiggle the second last joint ~10deg each way.")
 rospy.init_node('roscontrol_test')
-command = rospy.Publisher("/dsr01m1013/dsr_joint_position_controller/command", Float64MultiArray, queue_size=1)
-rospy.Subscriber("/dsr01m1013/joint_states", JointState, jointstatecallback)
-governor=rospy.Rate(10)
+# command = rospy.Publisher("/dsr01m1013/dsr_joint_position_controller/command", Float64MultiArray, queue_size=1)
+# rospy.Subscriber("/dsr01m1013/joint_states", JointState, jointstatecallback)
+command = rospy.Publisher("/dsr01h2515/dsr_joint_position_controller/command", Float64MultiArray, queue_size=1)
+rospy.Subscriber("/dsr01h2515/joint_states", JointState, jointstatecallback)
+governor=rospy.Rate(rate)
 
 # spin waiting for a valid read from the robot, 3 times should be more than enough.
 print("waiting for joint_states")
@@ -39,12 +42,14 @@ time=0
 print("Commanding a small wiggle")
 while not rospy.is_shutdown():
     # generate a signal for the robot to track
-    cmd_pos.data[4]=init_pos[4] + (0.2*sin(time))
+    cmd_pos.data[4]=init_pos[4] + (.2*sin(time))
     #publish command
     command.publish(cmd_pos)
     
+    print(rob_pos)
     print(cmd_pos.data)
-    
+    print("")
+
     # 10Hz
     governor.sleep()
-    time=time+.1
+    time=time+(1/rate)
