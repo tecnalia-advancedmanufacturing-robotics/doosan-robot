@@ -21,8 +21,10 @@ print("Setting up node roscontrol_test, I will wiggle the second last joint ~10d
 rospy.init_node('roscontrol_test')
 # command = rospy.Publisher("/dsr01m1013/dsr_joint_position_controller/command", Float64MultiArray, queue_size=1)
 # rospy.Subscriber("/dsr01m1013/joint_states", JointState, jointstatecallback)
-command = rospy.Publisher("/dsr01h2515/dsr_joint_position_controller/command", Float64MultiArray, queue_size=1)
-rospy.Subscriber("/dsr01h2515/joint_states", JointState, jointstatecallback)
+# command = rospy.Publisher("/dsr01h2515/dsr_joint_position_controller/command", Float64MultiArray, queue_size=1)
+command = rospy.Publisher("/dsr_control_node/dsr_joint_position_controller/command", Float64MultiArray, queue_size=1)
+# rospy.Subscriber("/dsr01h2515/joint_states", JointState, jointstatecallback)
+rospy.Subscriber("/dsr_control_node/joint_states", JointState, jointstatecallback)
 governor=rospy.Rate(rate)
 
 # spin waiting for a valid read from the robot, 3 times should be more than enough.
