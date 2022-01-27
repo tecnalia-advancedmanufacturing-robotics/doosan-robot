@@ -20,7 +20,7 @@
   `sys.path.append( os.path.abspath(os.path.join(os.path.dirname(__file__),"../../../../common/imp")) ) # get import path : DSR_ROBOT.py `
 - write a velocity interface using a horizon method and amovej's ability to take lists of joint velocities
     though it looks like amovej cant take a list at all, drflex.h line 6568. time to lodge a complaint.
-
+- tweak the RT services so that they can time out, seeing as how UDP is stateless and those commands can simply disappear into the void.
 
 # [Doosan Robotics](http://www.doosanrobotics.com/kr/)
 [![license - apache 2.0](https://img.shields.io/:license-Apache%202.0-yellowgreen.svg)](https://opensource.org/licenses/Apache-2.0)
