@@ -619,6 +619,7 @@ namespace dsr_control{
         float cmdbuf_[6];   //should this be an a std::array<float, NUM_JOINT>, then use .data method?
         double rate_=1.23;     //controller/statuser update rate
         int drops_=1;       //permitted drops, probably.
+        LPRT_OUTPUT_DATA_LIST recv_data_;
 
         //std::array<float, NUM_JOINT> cmd_;
         bool bCommand_;

@@ -732,29 +732,29 @@ namespace dsr_control{
         ///m_PubJogMultiAxis = private_nh_.advertise<dsr_msgs::JogMultiAxis>("jog_multi",100);
 
         // gazebo에 joint position 전달
-        m_PubtoGazebo = private_nh_.advertise<std_msgs::Float64MultiArray>("/dsr_joint_position_controller/command",1);
+        //m_PubtoGazebo = private_nh_.advertise<std_msgs::Float64MultiArray>("/dsr_joint_position_controller/command",1);
         // moveit의 trajectory/goal를 받아 제어기로 전달
         m_sub_joint_trajectory = private_nh_.subscribe("dsr_joint_trajectory_controller/follow_joint_trajectory/goal", 10, &DRHWInterface::trajectoryCallback, this);
         // topic echo 명령으로 제어기에 전달    disabled to make way for proper roscontrol write() method
         //m_sub_joint_position = private_nh_.subscribe("dsr_joint_position_controller/command", 1, &DRHWInterface::positionCallback, this);
         
         ros::NodeHandle nh_temp;
-        m_SubSerialRead = nh_temp.subscribe("serial_read", 100, &Serial_comm::read_callback, &ser_comm);
-        m_PubSerialWrite = nh_temp.advertise<std_msgs::String>("serial_write", 100);
+        m_SubSerialRead = nh_temp.subscribe("serial_read", 1, &Serial_comm::read_callback, &ser_comm);
+        m_PubSerialWrite = nh_temp.advertise<std_msgs::String>("serial_write", 1);
 
         // subscribe : Multi-JOG topic msg
-        m_sub_jog_multi_axis = private_nh_.subscribe("jog_multi", 10, &DRHWInterface::jogCallback, this);
-        m_sub_alter_motion_stream = private_nh_.subscribe("alter_motion_stream", 20, &DRHWInterface::alterCallback, this);
-        m_sub_servoj_stream = private_nh_.subscribe("servoj_stream", 20, &DRHWInterface::servojCallback, this);
-        m_sub_servol_stream = private_nh_.subscribe("servol_stream", 20, &DRHWInterface::servolCallback, this);
-        m_sub_speedj_stream = private_nh_.subscribe("speedj_stream", 20, &DRHWInterface::speedjCallback, this);
-        m_sub_speedl_stream = private_nh_.subscribe("speedl_stream", 20, &DRHWInterface::speedlCallback, this);
+        m_sub_jog_multi_axis = private_nh_.subscribe("jog_multi", 1, &DRHWInterface::jogCallback, this);
+        m_sub_alter_motion_stream = private_nh_.subscribe("alter_motion_stream", 1, &DRHWInterface::alterCallback, this);
+        m_sub_servoj_stream = private_nh_.subscribe("servoj_stream", 1, &DRHWInterface::servojCallback, this);
+        m_sub_servol_stream = private_nh_.subscribe("servol_stream", 1, &DRHWInterface::servolCallback, this);
+        m_sub_speedj_stream = private_nh_.subscribe("speedj_stream", 1, &DRHWInterface::speedjCallback, this);
+        m_sub_speedl_stream = private_nh_.subscribe("speedl_stream", 1, &DRHWInterface::speedlCallback, this);
 
-        m_sub_servoj_rt_stream = private_nh_.subscribe("servoj_rt_stream", 20, &DRHWInterface::servojRTCallback, this);
-        m_sub_servol_rt_stream = private_nh_.subscribe("servol_rt_stream", 20, &DRHWInterface::servolRTCallback, this);
-        m_sub_speedj_rt_stream = private_nh_.subscribe("speedj_rt_stream", 20, &DRHWInterface::speedjRTCallback, this);
-        m_sub_speedl_rt_stream = private_nh_.subscribe("speedl_rt_stream", 20, &DRHWInterface::speedlRTCallback, this);
-        m_sub_torque_rt_stream = private_nh_.subscribe("torque_rt_stream", 20, &DRHWInterface::torqueRTCallback, this);
+        m_sub_servoj_rt_stream = private_nh_.subscribe("servoj_rt_stream", 1, &DRHWInterface::servojRTCallback, this);
+        m_sub_servol_rt_stream = private_nh_.subscribe("servol_rt_stream", 1, &DRHWInterface::servolRTCallback, this);
+        m_sub_speedj_rt_stream = private_nh_.subscribe("speedj_rt_stream", 1, &DRHWInterface::speedjRTCallback, this);
+        m_sub_speedl_rt_stream = private_nh_.subscribe("speedl_rt_stream", 1, &DRHWInterface::speedlRTCallback, this);
+        m_sub_torque_rt_stream = private_nh_.subscribe("torque_rt_stream", 1, &DRHWInterface::torqueRTCallback, this);
 
         // system Operations
         m_nh_system[0] = private_nh_.advertiseService("system/set_robot_mode", &DRHWInterface::set_robot_mode_cb, this);
@@ -978,8 +978,8 @@ namespace dsr_control{
 
         //open a conventional connection AND a realtime connection, so we get some niceties and the realtime control.
         //TODO: might drop the conventional connection after init is done, not sure.
-        //if(Drfl.open_connection(host, nServerPort)&&Drfl.connect_rt_control(host, nServerPort))
-        if(Drfl.open_connection(host, nServerPort)) //TODO: just for testing right now, because the driver doesnt emulate the RT functions
+        if(Drfl.open_connection(host, nServerPort)&&Drfl.connect_rt_control(host, nServerPort))
+        //if(Drfl.open_connection(host, nServerPort)) //dropped the udp port for testing, as the emulator doesnt emulate that part.
         {
             //--- connect Emulator ? ------------------------------    
             if(host == "127.0.0.1") m_bIsEmulatorMode = true; 
@@ -1099,19 +1099,21 @@ namespace dsr_control{
 
     void DRHWInterface::read(ros::Duration& elapsed_time)
     {
-        std_msgs::Float64MultiArray msg;
-        // joints.pos, vel, eff should be update
-        //ROS_DEBUG("DRHWInterface::read()");
-        LPROBOT_POSE pose = Drfl.GetCurrentPose();
-        for(int i = 0; i < NUM_JOINT; i++){
-            ROS_DEBUG("[DRHWInterface::read] %d-pos: %7.3f", i, pose->_fPosition[i]);
-            joints[i].pos = deg2rad(pose->_fPosition[i]);	//update pos to Rviz - i think they mean /joint_states, and this is rad already.
-            msg.data.push_back(joints[i].pos);
+        // std_msgs::Float64MultiArray msg;
+        recv_data_ = Drfl.read_data_rt();    //unclear if this is buffered in the driver, or a nonblocking receive call.
+        
+        for(int i=0; i<NUM_JOINT; i++)
+        {
+            joints[i].pos=deg2rad(recv_data_->actual_joint_position_abs[i]);
+            joints[i].vel=deg2rad(recv_data_->actual_joint_velocity[i]);
+            joints[i].eff=recv_data_->actual_joint_torque[i];
+            
+            //msg.data.push_back(joints[i].pos);    //for the gazebo "simulator"
         }
-        if(m_strRobotGripper != "none"){
-            msg.data.push_back(joints[6].pos);
-        }
-        m_PubtoGazebo.publish(msg);
+        //if(m_strRobotGripper != "none"){
+        //  msg.data.push_back(joints[6].pos);
+        
+        //m_PubtoGazebo.publish(msg);
     }
     
     void DRHWInterface::write(ros::Duration& elapsed_time)
