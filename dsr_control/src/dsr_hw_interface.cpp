@@ -735,8 +735,8 @@ namespace dsr_control{
         m_PubtoGazebo = private_nh_.advertise<std_msgs::Float64MultiArray>("/dsr_joint_position_controller/command",1);
         // moveit의 trajectory/goal를 받아 제어기로 전달
         m_sub_joint_trajectory = private_nh_.subscribe("dsr_joint_trajectory_controller/follow_joint_trajectory/goal", 10, &DRHWInterface::trajectoryCallback, this);
-        // topic echo 명령으로 제어기에 전달
-        m_sub_joint_position = private_nh_.subscribe("dsr_joint_position_controller/command", 1, &DRHWInterface::positionCallback, this);
+        // topic echo 명령으로 제어기에 전달    disabled to make way for proper roscontrol write() method
+        //m_sub_joint_position = private_nh_.subscribe("dsr_joint_position_controller/command", 1, &DRHWInterface::positionCallback, this);
         
         ros::NodeHandle nh_temp;
         m_SubSerialRead = nh_temp.subscribe("serial_read", 100, &Serial_comm::read_callback, &ser_comm);
@@ -943,6 +943,7 @@ namespace dsr_control{
 
     bool DRHWInterface::init()
     {
+        //TODO: gut and replace with rt init
         ROS_INFO("[dsr_hw_interface] init() ==> setup callback fucntion");
         int nServerPort = 12345;
         ROS_INFO("INIT@@@@@@@@@@@@@@@@@@@@@@@@@");
@@ -1095,31 +1096,23 @@ namespace dsr_control{
     void DRHWInterface::write(ros::Duration& elapsed_time)
     {
         //ROS_INFO("DRHWInterface::write()");
-        static int count = 0;
-        // joints.cmd is updated
-        std::array<float, NUM_JOINT> tmp;
-        for(int i = 0; i < NUM_JOINT; i++){
-            ROS_DEBUG("[write]::write %d-pos: %7.3f %d-vel: %7.3f %d-cmd: %7.3f",
-            i,
-            joints[i].pos,
-            i,
-            joints[i].vel,
-            i,
-            joints[i].cmd);
-            tmp[i] = joints[i].cmd;
+        for(int i = 0; i < NUM_JOINT; i++) 
+        {
+            ROS_DEBUG("[write]::write %d-pos: %7.3f %d-vel: %7.3f %d-cmd: %7.3f",i,joints[i].pos,i,joints[i].vel,i,joints[i].cmd);
+            cmdbuf_[i]=joints[i].cmd;
         }
-        if( !bCommand_ ) return;
-        /*int state = Drfl.GetRobotState();
-        if( state == STATE_STANDBY ){
-            for(int i = 0; i < NUM_JOINT; i++){
-                if( fabs(cmd_[i] - joints[i].cmd) > 0.0174532925 ){
-                    Drfl.MoveJAsync(tmp.data(), 50, 50);
-                    ROS_INFO_STREAM("[write] current state: " << GetRobotStateString(state));
-                    std::copy(tmp.cbegin(), tmp.cend(), cmd_.begin());
-                    break;
-                }
-            }
-        }*/
+        
+        if(cmd_mode_==MD_POSITION)
+        {
+            //values that are null are interpolated by the controller, and zero time means right away. otherwise
+            Drfl.servoj_rt(cmdbuf_, sixzeros_, sixzeros_, 0.0);
+        }
+        else if(cmd_mode_==MD_VELOCITY)
+        {
+            Drfl.speedj_rt(cmdbuf_, sixzeros_, 0.0);
+        }
+
+
     }
 
     //----- SIG Handler --------------------------------------------------------------
@@ -1128,7 +1121,7 @@ namespace dsr_control{
         ROS_INFO("SIG HANDLER !!!!!!!!!");
 
         ros::NodeHandlePtr node = boost::make_shared<ros::NodeHandle>();
-        ros::Publisher pubRobotStop = node->advertise<dsr_msgs::RobotStop>("/"+m_strRobotName +m_strRobotModel+"/stop",100);
+        ros::Publisher pubRobotStop = node->advertise<dsr_msgs::RobotStop>("/"+m_strRobotName +m_strRobotModel+"/stop",1);
         
         dsr_msgs::RobotStop msg;
         
@@ -1137,6 +1130,7 @@ namespace dsr_control{
 
         ROS_INFO("[sigint_hangler] CloseConnection");
     }
+
     void DRHWInterface::positionCallback(const std_msgs::Float64MultiArray::ConstPtr& msg){
         ROS_INFO("callback: Position received");
         std::array<float, NUM_JOINT> target_pos;

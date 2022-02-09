@@ -553,7 +553,6 @@ namespace dsr_control{
         bool m_bIsEmulatorMode; 
 
         ros::NodeHandle private_nh_;
-        JointCmdMode cmd_mode_=MD_NONE;
 
         std::string m_strRobotName;
         std::string m_strRobotModel;
@@ -615,6 +614,9 @@ namespace dsr_control{
         hardware_interface::PositionJointInterface jnt_pos_interface;
         hardware_interface::VelocityJointInterface jnt_vel_interface;
         hardware_interface::VelocityJointInterface velocity_joint_interface_;   //this one was used for the mobile base, not the robot joints.
+        JointCmdMode cmd_mode_=MD_NONE;
+        float sixzeros_[6]={0.0,0.0,0.0,0.0,0.0,0.0};
+        float cmdbuf_[6];
 
         std::array<float, NUM_JOINT> cmd_;
         bool bCommand_;
