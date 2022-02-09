@@ -1,41 +1,60 @@
 import rospy
-from DSR_ROBOT import *
 
+import dsr_msgs
 
-# to start a realtime thing we will need to call a bunch of services the driver provides:
-# dsr_hw_interface.cpp line 894
-# // Realtime Operations
-# m_nh_realtime_service[0] = private_nh_.advertiseService("realtime/connect_rt_control", &DRHWInterface::connect_rt_control_cb, this);
-# m_nh_realtime_service[1] = private_nh_.advertiseService("realtime/disconnect_rt_control", &DRHWInterface::disconnect_rt_control_cb, this);
-# m_nh_realtime_service[2] = private_nh_.advertiseService("realtime/get_rt_control_output_version_list", &DRHWInterface::get_rt_control_output_version_list_cb, this);
-# m_nh_realtime_service[3] = private_nh_.advertiseService("realtime/get_rt_control_input_version_list", &DRHWInterface::get_rt_control_input_version_list_cb, this);
-# m_nh_realtime_service[4] = private_nh_.advertiseService("realtime/get_rt_control_input_data_list", &DRHWInterface::get_rt_control_input_data_list_cb, this);
-# m_nh_realtime_service[5] = private_nh_.advertiseService("realtime/get_rt_control_output_data_list", &DRHWInterface::get_rt_control_output_data_list_cb, this);
-# m_nh_realtime_service[6] = private_nh_.advertiseService("realtime/set_rt_control_input", &DRHWInterface::set_rt_control_input_cb, this);
-# m_nh_realtime_service[7] = private_nh_.advertiseService("realtime/set_rt_control_output", &DRHWInterface::set_rt_control_output_cb, this);
-# m_nh_realtime_service[8] = private_nh_.advertiseService("realtime/start_rt_control", &DRHWInterface::start_rt_control_cb, this);
-# m_nh_realtime_service[9] = private_nh_.advertiseService("realtime/stop_rt_control", &DRHWInterface::stop_rt_control_cb, this);
-# m_nh_realtime_service[10] = private_nh_.advertiseService("realtime/set_velj_rt", &DRHWInterface::set_velj_rt_cb, this);
-# m_nh_realtime_service[11] = private_nh_.advertiseService("realtime/set_accj_rt", &DRHWInterface::set_accj_rt_cb, this);
-# m_nh_realtime_service[12] = private_nh_.advertiseService("realtime/set_velx_rt", &DRHWInterface::set_velx_rt_cb, this);
-# m_nh_realtime_service[13] = private_nh_.advertiseService("realtime/set_accx_rt", &DRHWInterface::set_accx_rt_cb, this);
-# m_nh_realtime_service[14] = private_nh_.advertiseService("realtime/read_data_rt", &DRHWInterface::read_data_rt_cb, this);
-# m_nh_realtime_service[14] = private_nh_.advertiseService("realtime/write_data_rt", &DRHWInterface::write_data_rt_cb, this);
+# Python --  ros services might not be the best way to implement this, even as a dirty test - servoj_rt or speedj_rt services missing
 
-# IM THINKING:
+# TURN ON "Real-Time External Control Mode" in setting -- (end of list) Real time external control mode
 
-# connect_rt_control    (port 12347?)
-# set_rt_control_input
+# connect_rt_control    
+#  ip_address =  192.168.137.100
+#  port = 12345
+drt_connect=rospy.ServiceProxy('realtime/connect_rt_control', dsr_msgs.ConnectRTControl)
+retval=drt_connect(ip_address =  "192.168.137.100", port = 12345)
+if not retval:
+   raise SystemExit('realtime connect failed')
+
 # set_rt_control_output
-# start_rt_control
+#  version = "v1.0"
+#  period = 0.01    //sampling time, here 100Hz
+#  loss = 10     //unknown, currently unused by doosan firmware.
+drt_setout=rospy.ServiceProxy('realtime/set_rt_control_output', dsr_msgs.SetRTControlOutput)
+retval=drt_setout( version = "v1.0", period = 0.01, loss = 10)
+if not retval:
+   raise SystemExit('realtime set output failed')
 
-#may also need the "version" string from get_rt_control_input_version_list
+# start_rt_control!!
+drt_start=rospy.ServiceProxy('realtime/start_rt_control', dsr_msgs.StartRTControl)
+retval=drt_start()
+if not retval:
+   raise SystemExit('realtime start control failed')
 
-    # THEN IN A LOOP:
+# set up read,  write, stop and disconnect proxies
+drt_read=rospy.ServiceProxy('realtime/read_data_rt', dsr_msgs.ReadDataRT)
+drt_write=rospy.ServiceProxy('realtime/write_data_rt', dsr_msgs.WriteDataRT)
+readdata=dsr_msgs.RobotStateRT()
 
-    # read_data_rt
-    # write_data_rt
+# -------------main loop ------------------
+while not rospy.is_shutdown():
+   # read_data_rt  //all the data you could ever want, and some you definitly dont
+   readdata=drt_read()
 
-# CLEANUP:
+   ## write_data_rt //only force mode it seems? we're missing a servoj_rt or speedj_rt service call. leave this disabled.
+   retval=drt_write( external_force_torque=[0.0,0.0,0.0,0.0,0.0,0.0], 
+                     external_digital_input=0,
+                     external_digital_output=0,
+                     external_analog_input=[0.0,0.0,0.0,0.0,0.0,0.0],
+                     external_analog_output=[0.0,0.0,0.0,0.0,0.0,0.0])
+
+# ----------------CLEANUP-------------
+
 # stop_rt_control
+drt_stop=rospy.ServiceProxy('realtime/stop_rt_control', dsr_msgs.StopRTControl)
+retval = drt_stop()
+# no if, because when it fails... well there's not much i can do to stop it now is there?
+print("Stop returns: " + str(retval))
+
 # disconnect_rt_control_cb
+drt_drop=rospy.ServiceProxy('realtime/disconnect_rt_control', dsr_msgs.DisconnectRTControl)
+retval = drt_drop()
+print("Disconnect returns: " + str(retval))

@@ -4,6 +4,8 @@
 - deleted a wayward cmakelists in the root that called the roskinetic catkin cmake...? colcon wouldnt build it so I got rid of it.
 - fixed a missing return in drflex.h
 - reduced publisher and subscriber buffering to 1 message in /command topics.
+- installed python library DSR_ROBOT so there no more relative import horrors
+- added a realtime example (untested!)
 
 # bryan other notes
 - Watch out for the emulator not coming up fast enough for the driver to connect to it, get around that by running it a priori: `rosrun common run_dcrf_noetic.sh`
@@ -16,10 +18,7 @@
   `Drfl.amovej(target_pos.data(), 50, 50);`
 
 # bryan #TODOs
-- catkin_python_setup() for their common/imp libraries (as opposed to the nightmare that is relative imports):   
-  `sys.path.append( os.path.abspath(os.path.join(os.path.dirname(__file__),"../../../../common/imp")) ) # get import path : DSR_ROBOT.py `
-- write a velocity interface using a horizon method and amovej's ability to take lists of joint velocities
-    though it looks like amovej cant take a list at all, drflex.h line 6568. time to lodge a complaint.
+- write a velocity interface using RT components.
 - tweak the RT services so that they can time out, seeing as how UDP is stateless and those commands can simply disappear into the void.
 
 # [Doosan Robotics](http://www.doosanrobotics.com/kr/)

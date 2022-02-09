@@ -23,20 +23,20 @@ sys.dont_write_bytecode = True
 
 #import numpy as np
 
-from DRFC import *
-from DR_common import *
+from .DRFC import *
+from .DR_common import *
 
 from dsr_msgs.msg import *
 from dsr_msgs.srv import *
 
 from math import *
 
-import DR_init
-#print("robot_id ={0}".format(DR_init.__dsr__id) )
-#print("robot_model ={0}".format(DR_init.__dsr__model) )
+from . import DR_init
+#print("robot_id ={0}".format(__dsr__id) )
+#print("robot_model ={0}".format(__dsr__model) )
 
-_robot_id    = DR_init.__dsr__id
-_robot_model = DR_init.__dsr__model
+_robot_id    = __dsr__id
+_robot_model = __dsr__model
 _srv_name_prefix   = '/' + _robot_id + _robot_model  
 _topic_name_prefix = _srv_name_prefix
 
