@@ -616,9 +616,11 @@ namespace dsr_control{
         hardware_interface::VelocityJointInterface velocity_joint_interface_;   //this one was used for the mobile base, not the robot joints.
         JointCmdMode cmd_mode_=MD_NONE;
         float sixzeros_[6]={0.0,0.0,0.0,0.0,0.0,0.0};
-        float cmdbuf_[6];
+        float cmdbuf_[6];   //should this be an a std::array<float, NUM_JOINT>, then use .data method?
+        double rate_=1.23;     //controller/statuser update rate
+        int drops_=1;       //permitted drops, probably.
 
-        std::array<float, NUM_JOINT> cmd_;
+        //std::array<float, NUM_JOINT> cmd_;
         bool bCommand_;
         struct Joint{
             double cmd;

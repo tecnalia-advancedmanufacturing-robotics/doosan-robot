@@ -976,7 +976,10 @@ namespace dsr_control{
         ROS_INFO("host %s, port=%d bCommand: %d, mode: %s\n", host.c_str(), nServerPort, bCommand_, mode.c_str());
 
 
-        if(Drfl.open_connection(host, nServerPort))
+        //open a conventional connection AND a realtime connection, so we get some niceties and the realtime control.
+        //TODO: might drop the conventional connection after init is done, not sure.
+        //if(Drfl.open_connection(host, nServerPort)&&Drfl.connect_rt_control(host, nServerPort))
+        if(Drfl.open_connection(host, nServerPort)) //TODO: just for testing right now, because the driver doesnt emulate the RT functions
         {
             //--- connect Emulator ? ------------------------------    
             if(host == "127.0.0.1") m_bIsEmulatorMode = true; 
@@ -1025,13 +1028,21 @@ namespace dsr_control{
             if(mode == "real") eTargetSystem = ROBOT_SYSTEM_REAL;
             assert(Drfl.set_robot_system(eTargetSystem));
 
-            // to compare with joints[].cmd
-            for(int i = 0; i < NUM_JOINT; i++){
-                ROS_INFO("[init]::read %d-pos: %7.3f", i, joints[i].cmd);
-                cmd_[i] = joints[i].cmd;
-            }
-            return true;
-         }
+            // to compare with joints[].cmd - BS I dont understand this yet.
+            // for(int i = 0; i < NUM_JOINT; i++){
+            //     ROS_INFO("[init]::read %d-pos: %7.3f", i, joints[i].cmd);
+            //     cmd_[i] = joints[i].cmd;
+            // }
+
+            //--------- Bring up the realtime interface --------------
+            if(!private_nh_.getParam("dsr_joint_publisher/publish_rate", rate_))
+                ROS_ERROR("Joint state publisher has no rate defined!");
+            Drfl.set_rt_control_output("v1.0", 1/rate_, drops_);    //Drops isnt used yet.
+
+            ROS_INFO("[INIT] RT UDP interface connected and initialized to a rate of %fHz and %d drops.", rate_, drops_);
+
+            return(true);
+        }
         return false;
     }
 
@@ -1039,39 +1050,49 @@ namespace dsr_control{
     bool DRHWInterface::prepareSwitch(const std::list<hardware_interface::ControllerInfo> &start_list,
         const std::list<hardware_interface::ControllerInfo> &stop_list)
     {
-        if(start_list.size()>1)
+
+        //find the hardware interface type
+        for(auto controller:start_list)
         {
-            ROS_ERROR("Only start one at a time")  ;
-            return(false);  //not gonna code in a lot of fancy right now.
-        }
-        
-        auto controller=start_list.begin();
-        if(controller->claimed_resources.size()>1)
-        {
-            ROS_ERROR("only one control resource allowed");
-            return(false);
-        }
-        auto resource=controller->claimed_resources[0];
-        if(resource.hardware_interface =="hardware_interface::PositionJointInterface"){
-            ROS_INFO("[INTERFACE] [prepareSwitch] [START] POSITION INTERFACE REQUESTED");
-            cmd_mode_=MD_POSITION;
-        } 
-        else if(resource.hardware_interface =="hardware_interface::VelocityJointInterface"){
-            ROS_INFO("[INTERFACE] [prepareSwitch] [START] VELOCITY INTERFACE REQUESTED");
-            cmd_mode_=MD_VELOCITY;
-        }else
-        {
-            ROS_ERROR("[INTERFACE] [prepareSwitch] [START] hw interface not correct.");
-            cmd_mode_=MD_NONE;
-            return(false);
+            if(controller.type != "joint_state_controller/JointStateController")    //jsc alwways starts, doesnt mandate a hw interface
+            {
+                if(controller.claimed_resources.size()>1)
+                {
+                    ROS_ERROR("only one control resource allowed");
+                    return(false);
+                }
+                auto resource=controller.claimed_resources[0];
+                if(resource.hardware_interface =="hardware_interface::PositionJointInterface"){
+                    ROS_INFO("[INTERFACE] [prepareSwitch] [START] POSITION INTERFACE REQUESTED");
+                    cmd_mode_=MD_POSITION;
+                } 
+                else if(resource.hardware_interface =="hardware_interface::VelocityJointInterface"){
+                    ROS_INFO("[INTERFACE] [prepareSwitch] [START] VELOCITY INTERFACE REQUESTED");
+                    cmd_mode_=MD_VELOCITY;
+                }else
+                {
+                    ROS_ERROR("[INTERFACE] [prepareSwitch] [START] hw interface not correct.");
+                    cmd_mode_=MD_NONE;
+                    return(false);
+                }
+            }
         }
 
-        return(true);
+        auto controller=start_list.begin();
+
+        
+        //start the realtime interface on the doosan side, if prepareswitch-doswitch-read/write isnt fast enough this could fail on the doosan side.
+        ROS_INFO("[INTERFACE] [prepareSwitch]: ACTIVATING DOOSAN REALTIME CONTROL");
+        bool retval=Drfl.start_rt_control();
+
+        return(retval);
     }
 
     void DRHWInterface::doSwitch(const std::list<hardware_interface::ControllerInfo> &start_list,
                             const std::list<hardware_interface::ControllerInfo> &stop_list){
         ROS_INFO("[INTERFACE] [doSwitch]: Switching Controllers . . . ");
+        
+
     }
         
 
