@@ -699,14 +699,21 @@ namespace dsr_control{
                 &joints[i].vel,
                 &joints[i].eff);
             jnt_state_interface.registerHandle(jnt_state_handle);
-
+    
             hardware_interface::JointHandle jnt_pos_handle(
                 jnt_state_handle,
                 &joints[i].cmd);
             jnt_pos_interface.registerHandle(jnt_pos_handle);
+
+            //velocity robot joint interface
+            hardware_interface::JointHandle jnt_vel_handle(
+                jnt_state_handle,
+                &joints[i].cmd);
+            jnt_vel_interface.registerHandle(jnt_vel_handle);
         }
         registerInterface(&jnt_state_interface);
         registerInterface(&jnt_pos_interface);
+        registerInterface(&jnt_vel_interface);      //register the joint velocity interface
 
         /*ros::V_string joint_names = boost::assign::list_of("front_left_wheel")("front_right_wheel")("rear_left_wheel")("rear_right_wheel");
         for (unsigned int i = 0; i < joint_names.size(); i++){
@@ -1026,6 +1033,47 @@ namespace dsr_control{
          }
         return false;
     }
+
+    //A hacked down version, since we're not bringing in all my secrets yet.
+    bool DRHWInterface::prepareSwitch(const std::list<hardware_interface::ControllerInfo> &start_list,
+        const std::list<hardware_interface::ControllerInfo> &stop_list)
+    {
+        if(start_list.size()>1)
+        {
+            ROS_ERROR("Only start one at a time")  ;
+            return(false);  //not gonna code in a lot of fancy right now.
+        }
+        
+        auto controller=start_list.begin();
+        if(controller->claimed_resources.size()>1)
+        {
+            ROS_ERROR("only one control resource allowed");
+            return(false);
+        }
+        auto resource=controller->claimed_resources[0];
+        if(resource.hardware_interface =="hardware_interface::PositionJointInterface"){
+            ROS_INFO("[INTERFACE] [prepareSwitch] [START] POSITION INTERFACE REQUESTED");
+            cmd_mode_=MD_POSITION;
+        } 
+        else if(resource.hardware_interface =="hardware_interface::VelocityJointInterface"){
+            ROS_INFO("[INTERFACE] [prepareSwitch] [START] VELOCITY INTERFACE REQUESTED");
+            cmd_mode_=MD_VELOCITY;
+        }else
+        {
+            ROS_ERROR("[INTERFACE] [prepareSwitch] [START] hw interface not correct.");
+            cmd_mode_=MD_NONE;
+            return(false);
+        }
+
+        return(true);
+    }
+
+    void DRHWInterface::doSwitch(const std::list<hardware_interface::ControllerInfo> &start_list,
+                            const std::list<hardware_interface::ControllerInfo> &stop_list){
+        ROS_INFO("[INTERFACE] [doSwitch]: Switching Controllers . . . ");
+    }
+        
+
 
     void DRHWInterface::read(ros::Duration& elapsed_time)
     {

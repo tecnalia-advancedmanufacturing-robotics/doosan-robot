@@ -507,6 +507,8 @@ using namespace DRAFramework;
 
 namespace dsr_control{
 
+    enum JointCmdMode {MD_NONE, MD_POSITION, MD_VELOCITY, MD_EFFORT};
+
     class DRHWInterface : public hardware_interface::RobotHW
     {
     public:
@@ -514,6 +516,11 @@ namespace dsr_control{
         virtual ~DRHWInterface();
 
         bool init();
+        virtual bool prepareSwitch(const std::list<hardware_interface::ControllerInfo> &start_list,
+                        const std::list<hardware_interface::ControllerInfo> &stop_list);
+        virtual void doSwitch(const std::list<hardware_interface::ControllerInfo> &start_list,
+                        const std::list<hardware_interface::ControllerInfo> &stop_list);
+
         virtual void read(ros::Duration& elapsed_time);
         virtual void write(ros::Duration& elapsed_time);
         int MsgPublisher_RobotState();
@@ -546,6 +553,7 @@ namespace dsr_control{
         bool m_bIsEmulatorMode; 
 
         ros::NodeHandle private_nh_;
+        JointCmdMode cmd_mode_=MD_NONE;
 
         std::string m_strRobotName;
         std::string m_strRobotModel;
@@ -605,7 +613,8 @@ namespace dsr_control{
         // ROS Interface
         hardware_interface::JointStateInterface jnt_state_interface;
         hardware_interface::PositionJointInterface jnt_pos_interface;
-        hardware_interface::VelocityJointInterface velocity_joint_interface_;
+        hardware_interface::VelocityJointInterface jnt_vel_interface;
+        hardware_interface::VelocityJointInterface velocity_joint_interface_;   //this one was used for the mobile base, not the robot joints.
 
         std::array<float, NUM_JOINT> cmd_;
         bool bCommand_;
