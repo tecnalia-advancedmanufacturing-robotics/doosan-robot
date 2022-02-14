@@ -175,3 +175,8 @@ install(PROGRAMS scripts/simple/roscontrol_test.py
    DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
 
 )
+
+install(PROGRAMS scripts/simple/realtime.py
+   DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
+
+)
