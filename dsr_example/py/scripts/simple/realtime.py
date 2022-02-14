@@ -15,7 +15,8 @@ from dsr_msgs.msg import ServoJRTStream, RobotStateRT
 #  ip_address =  192.168.137.100
 #  port = 12345
 drt_connect=rospy.ServiceProxy('/dsr01h2515/realtime/connect_rt_control', ConnectRTControl)
-# retval=drt_connect(ip_address =  "192.168.137.100", port = 12345)  driver alrady connects
+# #realtime driver already does a connect, use the std driver.
+retval=drt_connect(ip_address =  "192.168.137.100", port = 12345)  
 if not retval:
    raise SystemExit('realtime connect failed')
 
