@@ -3,35 +3,49 @@ from math import sin
 from time import sleep
 
 import rospy
-#import dsr_msgs
+from sensor_msgs.msg import JointState
 from dsr_msgs.srv import *
-from dsr_msgs.msg import ServoJRTStream, RobotStateRT
+from dsr_msgs.msg import SpeedJRTStream, ServoJRTStream, RobotStateRT
 
+rospy.init_node("realtime_test")
 # Python --  ros services might not be the best way to implement this, even as a dirty test - servoj_rt or speedj_rt services missing
 
 # TURN ON "Real-Time External Control Mode" in setting -- (end of list) Real time external control mode
 
 # connect_rt_control    
 #  ip_address =  192.168.137.100
-#  port = 12345
-drt_connect=rospy.ServiceProxy('/dsr01h2515/realtime/connect_rt_control', ConnectRTControl)
+#  port = 12347
+
+## bryans feature_rt_roscontrol dsr driver does an rt connect already ##
+
+# drt_connect=rospy.ServiceProxy('/dsr01h2515/realtime/connect_rt_control', ConnectRTControl)
 # retval=drt_connect(ip_address =  "192.168.137.100", port = 12345)  driver alrady connects
-if not retval:
-   raise SystemExit('realtime connect failed')
+# if not retval:
+#    raise SystemExit('realtime connect failed')
 
 # set_rt_control_output
 #  version = "v1.0"
 #  period = 0.01    //sampling time, here 100Hz
-#  loss = 10     //unknown, currently unused by doosan firmware.
+#  loss = 10     //unknown, currently unused by doros osan firmware.
 drt_setout=rospy.ServiceProxy('/dsr01h2515/realtime/set_rt_control_output',SetRTControlOutput)
 retval=drt_setout( version = "v1.0", period = 0.01, loss = 10)
 if not retval:
    raise SystemExit('realtime set output failed')
 
-
+roboang=[0,0,0,0,0,0]
+robovel=[0,0,0,0,0,0]
+read_cb_count=0
 # set up read,  write, stop and disconnect proxies
-drt_read=rospy.ServiceProxy('/dsr01h2515/realtime/read_data_rt', ReadDataRT)
+def read_cb(data: JointState):
+   global roboang, robovel, read_cb_count
+   roboang=list(data.position)
+   robovel=list(data.velocity)
+   #print(roboang)
+   read_cb_count=read_cb_count+1
+
+rospy.Subscriber("/dsr01h2515/joint_states", JointState, read_cb) # driver doesnt expose rt data as topic yet
 drt_write=pub = rospy.Publisher('/dsr01h2515/servoj_rt_stream', ServoJRTStream, queue_size=1)
+#drt_write=pub = rospy.Publisher('/dsr01h2515/speedj_rt_stream', SpeedJRTStream, queue_size=1)
 readdata=RobotStateRT()
 writedata=ServoJRTStream()
 writedata.vel=[0,0,0,0,0,0]
@@ -46,24 +60,37 @@ retval=drt_start()
 if not retval:
    raise SystemExit('realtime start control failed')
 
-readdata=drt_read()
-init_pos=readdata.data.actual_joint_position_abs
+#readdata=drt_read()
+while read_cb_count<5:
+   sleep(0.01)
+
+init_pos=roboang
 
 # -------------main loop ------------------
 while not rospy.is_shutdown():
    
    # read_data_rt  //all the data you could ever want, and some you definitly dont
-   readdata=drt_read()
+   #readdata=drt_read()
 
-   writedata.pos=init_pos
+   
+   writedata.acc=[0,0,0,0,0,0]
+   writedata.vel=[.1,.1,.1,.1,50,.1]
+   writedata.time=1
    writedata.pos[4]=init_pos[4]+0.1*sin(thetime)
+   #writedata.vel[4]=57*0.1*sin(thetime)
    # use servoj_rt instead for position control, which isnt exposed as a service, but as a topic subscriber
    drt_write.publish(writedata)
 
    sleep(0.01) #ros later
+   print(f"des: {writedata.pos[4]:5.3f}")
+   print(f"act: {roboang[4]:5.3f}\n")
    thetime=thetime+0.01
 
 # ----------------CLEANUP-------------
+
+# stop motion
+writedata.vel=[0,0,0,0,0,0]
+drt_write.publish(writedata)
 
 # stop_rt_control
 drt_stop=rospy.ServiceProxy('/dsr01h2515/realtime/stop_rt_control', StopRTControl)

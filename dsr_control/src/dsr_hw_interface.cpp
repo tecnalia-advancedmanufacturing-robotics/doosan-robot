@@ -978,7 +978,7 @@ namespace dsr_control{
 
         //open a conventional connection AND a realtime connection, so we get some niceties and the realtime control.
         //TODO: might drop the conventional connection after init is done, not sure.
-        if(Drfl.open_connection(host, nServerPort)&&Drfl.connect_rt_control(host, nServerPort))
+        if(Drfl.open_connection(host, nServerPort)&&Drfl.connect_rt_control(host))
         //if(Drfl.open_connection(host, nServerPort)) //dropped the udp port for testing, as the emulator doesnt emulate that part.
         {
             //--- connect Emulator ? ------------------------------    
@@ -1104,6 +1104,7 @@ namespace dsr_control{
         
         for(int i=0; i<NUM_JOINT; i++)
         {
+            //Read uses realtime feedback message
             joints[i].pos=deg2rad(recv_data_->actual_joint_position_abs[i]);
             joints[i].vel=deg2rad(recv_data_->actual_joint_velocity[i]);
             joints[i].eff=recv_data_->actual_joint_torque[i];
@@ -1127,12 +1128,14 @@ namespace dsr_control{
         
         if(cmd_mode_==MD_POSITION)
         {
-            //values that are null are interpolated by the controller, and zero time means right away. otherwise
-            Drfl.servoj_rt(cmdbuf_, sixzeros_, sixzeros_, 0.0);
+            //values that are null are interpolated by the controller, and zero time means right away.
+            //disabled for now due to testing errors
+            //Drfl.servoj_rt(cmdbuf_, sixzeros_, sixzeros_, 0.0);
         }
         else if(cmd_mode_==MD_VELOCITY)
         {
-            Drfl.speedj_rt(cmdbuf_, sixzeros_, 0.0);
+            //disabled for now due to testing errors.
+            //Drfl.speedj_rt(cmdbuf_, sixzeros_, 0.0);
         }
 
 
