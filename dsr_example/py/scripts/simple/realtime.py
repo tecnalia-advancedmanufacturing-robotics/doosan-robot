@@ -8,9 +8,6 @@ from dsr_msgs.srv import *
 from dsr_msgs.msg import SpeedJRTStream, ServoJRTStream, RobotStateRT
 
 rospy.init_node("realtime_test")
-# Python --  ros services might not be the best way to implement this, even as a dirty test - servoj_rt or speedj_rt services missing
-
-# TURN ON "Real-Time External Control Mode" in setting -- (end of list) Real time external control mode
 
 # connect_rt_control    
 #  ip_address =  192.168.137.100
@@ -19,14 +16,14 @@ rospy.init_node("realtime_test")
 ## bryans feature_rt_roscontrol dsr driver does an rt connect already ##
 
 # drt_connect=rospy.ServiceProxy('/dsr01h2515/realtime/connect_rt_control', ConnectRTControl)
-# retval=drt_connect(ip_address =  "192.168.137.100", port = 12345)  driver alrady connects
+# retval=drt_connect(ip_address =  "192.168.137.100", port = 12347)  driver alrady connects
 # if not retval:
 #    raise SystemExit('realtime connect failed')
 
 # set_rt_control_output
 #  version = "v1.0"
 #  period = 0.01    //sampling time, here 100Hz
-#  loss = 10     //unknown, currently unused by doros osan firmware.
+#  loss = 10     //unknown, currently unused by doosan firmware.
 drt_setout=rospy.ServiceProxy('/dsr01h2515/realtime/set_rt_control_output',SetRTControlOutput)
 retval=drt_setout( version = "v1.0", period = 0.01, loss = 10)
 if not retval:
