@@ -41,10 +41,11 @@ def read_cb(data: JointState):
    read_cb_count=read_cb_count+1
 
 rospy.Subscriber("/dsr01h2515/joint_states", JointState, read_cb) # driver doesnt expose rt data as topic yet
-drt_write=pub = rospy.Publisher('/dsr01h2515/servoj_rt_stream', ServoJRTStream, queue_size=1)
-#drt_write=pub = rospy.Publisher('/dsr01h2515/speedj_rt_stream', SpeedJRTStream, queue_size=1)
+# drt_write=pub = rospy.Publisher('/dsr01h2515/servoj_rt_stream', ServoJRTStream, queue_size=1)
+drt_write=pub = rospy.Publisher('/dsr01h2515/speedj_rt_stream', SpeedJRTStream, queue_size=1)
 readdata=RobotStateRT()
-writedata=ServoJRTStream()
+#writedata=ServoJRTStream()
+writedata=SpeedJRTStream()
 writedata.vel=[0,0,0,0,0,0]
 writedata.acc=[0,0,0,0,0,0]
 writedata.time=0
@@ -71,16 +72,18 @@ while not rospy.is_shutdown():
 
    
    writedata.acc=[0,0,0,0,0,0]
-   writedata.vel=[.1,.1,.1,.1,50,.1]
-   writedata.time=1
-   writedata.pos[4]=init_pos[4]+0.1*sin(thetime)
-   #writedata.vel[4]=57*0.1*sin(thetime)
+   writedata.vel=[0,0,0,0,50,0]
+   writedata.time=0.01
+   # writedata.pos[4]=init_pos[4]+0.1*sin(thetime)
+   writedata.vel[4]=57*0.1*sin(thetime)
    # use servoj_rt instead for position control, which isnt exposed as a service, but as a topic subscriber
    drt_write.publish(writedata)
 
    sleep(0.01) #ros later
-   print(f"des: {writedata.pos[4]:5.3f}")
-   print(f"act: {roboang[4]:5.3f}\n")
+   # print(f"des: {writedata.pos[4]:5.3f}")
+   print(f"des: {writedata.vel[4]:5.3f}")
+   # print(f"act: {roboang[4]:5.3f}\n")
+   print(f"act: {robovel[4]:5.3f}\n")
    thetime=thetime+0.01
 
 # ----------------CLEANUP-------------
