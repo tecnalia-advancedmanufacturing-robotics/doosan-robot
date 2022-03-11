@@ -237,7 +237,7 @@
 #include "../../../common/include/dsr_serial.h"
 
 #ifndef PI
-#define PI 3.14159265359
+#define PI 3.141592653589
 #endif
 #define deg2rad(deg)  ((deg) * PI / 180.0)
 #define rad2deg(rad)  ((rad) * 180.0 / PI)
@@ -616,6 +616,7 @@ namespace dsr_control{
         hardware_interface::VelocityJointInterface velocity_joint_interface_;   //this one was used for the mobile base, not the robot joints.
         JointCmdMode cmd_mode_=MD_NONE;
         float sixzeros_[6]={0.0,0.0,0.0,0.0,0.0,0.0};
+        float six_magic_cookies_[6]={-10000.0,-10000.0,-10000.0,-10000.0,-10000.0,-10000.0};
         float cmdbuf_[6];   //should this be an a std::array<float, NUM_JOINT>, then use .data method?
         double rate_=1.23;     //controller/statuser update rate
         int drops_=1;       //permitted drops, probably.
