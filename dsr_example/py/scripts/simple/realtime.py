@@ -50,20 +50,30 @@ writedata.vel=[0,0,0,0,0,0]
 writedata.acc=[0,0,0,0,0,0]
 writedata.time=0
 
-thetime=0
-
 # start_rt_control!!
 drt_start=rospy.ServiceProxy('/dsr01h2515/realtime/start_rt_control', StartRTControl)
 retval=drt_start()
 if not retval:
    raise SystemExit('realtime start control failed')
 
-#readdata=drt_read()
+#set limits
+drt_velj_limits=rospy.ServiceProxy('/dsr01h2515/realtime/set_velj_rt', SetVelJRT)
+drt_accj_limits=rospy.ServiceProxy('/dsr01h2515/realtime/set_accj_rt', SetAccJRT)
+drt_velx_limits=rospy.ServiceProxy('/dsr01h2515/realtime/set_velx_rt', SetVelXRT)
+drt_accx_limits=rospy.ServiceProxy('/dsr01h2515/realtime/set_accx_rt', SetAccXRT)
+
+drt_velj_limits([100, 100, 100, 100, 100, 100])
+drt_accj_limits([100, 100, 100, 100, 100, 100])
+drt_accx_limits(100,10)
+drt_velx_limits(200,10)
+
+
 while read_cb_count<5:
    sleep(0.01)
 
 init_pos=roboang
-
+timestep=0.01
+thetime=0
 # -------------main loop ------------------
 while not rospy.is_shutdown():
    
@@ -71,20 +81,21 @@ while not rospy.is_shutdown():
    #readdata=drt_read()
 
    
-   writedata.acc=[0,0,0,0,0,0]
-   writedata.vel=[0,0,0,0,50,0]
-   writedata.time=0.01
+   writedata.acc=[-10000,-10000,-10000,-10000,-10000,-10000]
+   writedata.vel=[0,0,0,0,0,0]
+   writedata.time=0.0001
    # writedata.pos[4]=init_pos[4]+0.1*sin(thetime)
    writedata.vel[4]=57*0.1*sin(thetime)
-   # use servoj_rt instead for position control, which isnt exposed as a service, but as a topic subscriber
+   
+   # publish command
    drt_write.publish(writedata)
 
-   sleep(0.01) #ros later
+   sleep(timestep) #ros later
    # print(f"des: {writedata.pos[4]:5.3f}")
-   print(f"des: {writedata.vel[4]:5.3f}")
+   print(f"des: {(writedata.vel[4]/57):5.3f}")
    # print(f"act: {roboang[4]:5.3f}\n")
    print(f"act: {robovel[4]:5.3f}\n")
-   thetime=thetime+0.01
+   thetime=thetime+timestep
 
 # ----------------CLEANUP-------------
 

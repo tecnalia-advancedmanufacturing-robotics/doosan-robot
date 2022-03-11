@@ -1085,6 +1085,9 @@ namespace dsr_control{
         ROS_INFO("[INTERFACE] [prepareSwitch]: ACTIVATING DOOSAN REALTIME CONTROL");
         bool retval=Drfl.start_rt_control();
 
+        //seems like driver starts up in cautious mode, this kicks it up a notch
+        Drfl.set_safety_mode(SAFETY_MODE_AUTONOMOUS, SAFETY_MODE_EVENT_MOVE);   //BAM!
+
         return(retval);
     }
 
@@ -1272,7 +1275,7 @@ namespace dsr_control{
         std::copy(msg->vel.cbegin(), msg->vel.cend(), target_vel.begin());
         std::array<float, NUM_JOINT> target_acc;
         std::copy(msg->acc.cbegin(), msg->acc.cend(), target_acc.begin());
-        int time = msg->time;
+        float time = msg->time;
 
         Drfl.speedj_rt(target_vel.data(), target_acc.data(), time);
     }
