@@ -1080,13 +1080,18 @@ namespace dsr_control{
 
         auto controller=start_list.begin();
 
-        
         //start the realtime interface on the doosan side, if prepareswitch-doswitch-read/write isnt fast enough this could fail on the doosan side.
         ROS_INFO("[INTERFACE] [prepareSwitch]: ACTIVATING DOOSAN REALTIME CONTROL");
         bool retval=Drfl.start_rt_control();
 
         //seems like driver starts up in cautious mode, this kicks it up a notch
         Drfl.set_safety_mode(SAFETY_MODE_AUTONOMOUS, SAFETY_MODE_EVENT_MOVE);   //BAM!
+
+        //set accel and vel limits for joints
+        float acclimits[6]={200, 200, 200, 200, 200, 200};  //acc limits in degrees, i guessed because i cannot find any docs.
+        Drfl.set_accj_rt(acclimits);
+        float vellimits[6]={100, 80, 100, 180, 180, 180};   //straight from my h2515.. well its not exactly mine but you know, we're still close.
+        Drfl.set_velj_rt(vellimits);
 
         return(retval);
     }
