@@ -648,7 +648,7 @@ namespace dsr_control{
         ros::Subscriber sub_robot_stop = nh.subscribe("stop", 1, MsgScriber);
         //ros::spin();
         ros::MultiThreadedSpinner spinner(2);
-        spinner.spin();
+        spinner.spin(); //TODO: spinonce in a loop on DHI_ok_
     }
 
     void DRHWInterface::thread_publisher(DRHWInterface* pDRHWInterface, ros::NodeHandle nh, int nPubRate)
