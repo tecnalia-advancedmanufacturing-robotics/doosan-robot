@@ -1133,7 +1133,7 @@ namespace dsr_control{
         {
             //values that are magic_cookied are interpolated by the controller, and nonzero time < .001 means right away.
             //Drfl.servoj_rt(cmdbuf_, six_magic_cookies_, six_magic_cookies_, 0.0);
-            ROS_ERROR("[DSR HW INTERFACE][WRITE] Position mode not supported due to issues with servoj_rt implementation. Use Velocity interface");
+            ROS_ERROR_THROTTLE(5, "[DSR HW INTERFACE][WRITE] Position mode not supported due to issues with servoj_rt implementation. Use Velocity interface");
         }
         else if(cmd_mode_==MD_VELOCITY)
         {
