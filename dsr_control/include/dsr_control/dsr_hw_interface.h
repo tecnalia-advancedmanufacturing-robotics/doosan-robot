@@ -549,6 +549,7 @@ namespace dsr_control{
         std::string GetRobotModel();
 
     private:
+        bool DHI_ok_;               //used to signal spinners that it's time to die.
         int  m_nVersionDRCF;
         bool m_bIsEmulatorMode; 
 

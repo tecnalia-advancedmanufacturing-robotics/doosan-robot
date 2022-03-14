@@ -645,7 +645,7 @@ namespace dsr_control{
     void DRHWInterface::thread_subscribe(ros::NodeHandle nh)
     {
         //ros::NodeHandlePtr node = boost::make_shared<ros::NodeHandle>();
-        ros::Subscriber sub_robot_stop = nh.subscribe("stop", 100, MsgScriber);
+        ros::Subscriber sub_robot_stop = nh.subscribe("stop", 1, MsgScriber);
         //ros::spin();
         ros::MultiThreadedSpinner spinner(2);
         spinner.spin();
@@ -654,11 +654,11 @@ namespace dsr_control{
     void DRHWInterface::thread_publisher(DRHWInterface* pDRHWInterface, ros::NodeHandle nh, int nPubRate)
     {  
         //ros::NodeHandlePtr node = boost::make_shared<ros::NodeHandle>();
-        ros::Publisher PubRobotState = nh.advertise<dsr_msgs::RobotState>("state",100);
+        ros::Publisher PubRobotState = nh.advertise<dsr_msgs::RobotState>("state",1);
         dsr_msgs::RobotState msg;
 
         ros::Rate r(nPubRate);
-        while (ros::ok())
+        while (ros::ok()&&pDRHWInterface->DHI_ok_)
         {
             //ROS_INFO("thread_publisher running!");      
             if(pDRHWInterface) pDRHWInterface->MsgPublisher_RobotState();
@@ -921,6 +921,7 @@ namespace dsr_control{
         memset(&m_stDrError, 0x00, sizeof(DR_ERROR));
 
         // create threads     
+        DHI_ok_=true;
         m_th_subscribe = boost::thread( boost::bind(&thread_subscribe, private_nh_) );
         m_th_publisher = boost::thread( boost::bind(&thread_publisher, this, private_nh_, DSR_CTL_PUB_RATE/*hz*/) );    //100hz(10ms)
 
@@ -930,23 +931,22 @@ namespace dsr_control{
     }
     DRHWInterface::~DRHWInterface()
     {
+        DHI_ok_=false;
         //ROS_INFO("DRHWInterface::~DRHWInterface() 0");
         Drfl.close_connection();
 
         //ROS_INFO("DRHWInterface::~DRHWInterface() 1");
-        m_th_publisher.join();   //kill publisher thread
+        m_th_publisher.join();   //kill publisher thread    //TODO: i dont think that's how that works.
         //ROS_INFO("DRHWInterface::~DRHWInterface() 2");
 
-        m_th_subscribe.join();   //kill subscribe thread 
+        m_th_subscribe.join();   //kill subscribe thread    //TODO: i dont think that's how that works.
         ROS_INFO("DRHWInterface::~DRHWInterface()");
     }
 
     bool DRHWInterface::init()
     {
-        //TODO: gut and replace with rt init
-        ROS_INFO("[dsr_hw_interface] init() ==> setup callback fucntion");
+        ROS_INFO("[dsr_hw_interface] init()");
         int nServerPort = 12345;
-        ROS_INFO("INIT@@@@@@@@@@@@@@@@@@@@@@@@@");
         //--- doosan API's call-back fuctions : Only work within 50msec in call-back functions
         Drfl.set_on_tp_initializing_completed(OnTpInitializingCompletedCB);
         Drfl.set_on_homming_completed(OnHommingCompletedCB);
@@ -973,7 +973,7 @@ namespace dsr_control{
 
         //for test host = "127.0.0.1";
 
-        ROS_INFO("host %s, port=%d bCommand: %d, mode: %s\n", host.c_str(), nServerPort, bCommand_, mode.c_str());
+        ROS_INFO("[dsr_hw_interface] host %s, port=%d bCommand: %d, mode: %s\n", host.c_str(), nServerPort, bCommand_, mode.c_str());
 
 
         //open a conventional connection AND a realtime connection, so we get some niceties and the realtime control.
@@ -1021,7 +1021,7 @@ namespace dsr_control{
 
             //--- Set Robot mode : MANUAL or AUTO
             //assert(Drfl.SetRobotMode(ROBOT_MODE_MANUAL));
-            assert(Drfl.set_robot_mode(ROBOT_MODE_AUTONOMOUS));
+            assert(Drfl.set_robot_mode(ROBOT_MODE_AUTONOMOUS)); //normal speed mode ros manual pp304
 
             //--- Set Robot mode : virual or real 
             ROBOT_SYSTEM eTargetSystem = ROBOT_SYSTEM_VIRTUAL;
@@ -1063,8 +1063,10 @@ namespace dsr_control{
                 }
                 auto resource=controller.claimed_resources[0];
                 if(resource.hardware_interface =="hardware_interface::PositionJointInterface"){
-                    ROS_INFO("[INTERFACE] [prepareSwitch] [START] POSITION INTERFACE REQUESTED");
-                    cmd_mode_=MD_POSITION;
+                    ROS_ERROR("[INTERFACE] [prepareSwitch] [START] POSITION INTERFACE REQUESTED, but it is not available due to servoj_rt implementation issues.");
+                    //cmd_mode_=MD_POSITION;
+                    cmd_mode_=MD_NONE;
+                    return(false);                    
                 } 
                 else if(resource.hardware_interface =="hardware_interface::VelocityJointInterface"){
                     ROS_INFO("[INTERFACE] [prepareSwitch] [START] VELOCITY INTERFACE REQUESTED");
@@ -1151,17 +1153,19 @@ namespace dsr_control{
     //----- SIG Handler --------------------------------------------------------------
     void DRHWInterface::sigint_handler(int signo)
     {
-        ROS_INFO("SIG HANDLER !!!!!!!!!");
+        ROS_INFO("[DSR HW INTERFACE] SIG HANDLER !!!!!!!!!");
 
-        ros::NodeHandlePtr node = boost::make_shared<ros::NodeHandle>();
-        ros::Publisher pubRobotStop = node->advertise<dsr_msgs::RobotStop>("/"+m_strRobotName +m_strRobotModel+"/stop",1);
+        // ros::NodeHandlePtr node = boost::make_shared<ros::NodeHandle>();
+        // ros::Publisher pubRobotStop = node->advertise<dsr_msgs::RobotStop>("/"+m_strRobotName +m_strRobotModel+"/stop",1);
         
-        dsr_msgs::RobotStop msg;
+        // dsr_msgs::RobotStop msg;
         
-        msg.stop_mode  = STOP_TYPE_QUICK;
-        pubRobotStop.publish(msg);
+        // msg.stop_mode  = STOP_TYPE_QUICK;
+        // pubRobotStop.publish(msg);
 
-        ROS_INFO("[sigint_hangler] CloseConnection");
+        // ROS_INFO("[sigint_hangler] CloseConnection");
+        Drfl.stop(STOP_TYPE_QUICK);
+        DHI_ok_=false;
     }
 
     void DRHWInterface::positionCallback(const std_msgs::Float64MultiArray::ConstPtr& msg){

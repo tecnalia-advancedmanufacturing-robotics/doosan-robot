@@ -46,7 +46,7 @@
       <arg name="controller"        value="$(arg controller)"/>
     </include>
   </group>
-
+ 
   <group if="$(eval arg('gripper') == 'robotiq_2f')">
     <!-- gazebo를 위한 controller -->
     <include file="$(find dsr_control)/launch/dsr_fake_control.launch">
