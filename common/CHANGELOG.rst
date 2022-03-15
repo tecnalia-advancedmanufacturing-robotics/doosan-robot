@@ -5,12 +5,12 @@ Changelog for package common
 1.2.0 (2021-07-01)
 ------------------
 * update DRFL
-* update emulator and example
-* update noetic
-* update common package tree
-* modify robotiq_2f in gazebo
+* update Melodic
+* moveit gazebo connection
+* update robotiq_2f_plugin to melodic version
+* update a A-seeries Model and package tree
 * update services
-* Contributors: doosan-robotics, dra
+* Contributors: doosan-robotics, dra, ros.robotics
 
 1.1.0 (2020-04-29)
 ------------------
