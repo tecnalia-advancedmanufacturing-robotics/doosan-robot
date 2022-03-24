@@ -1,10 +1,10 @@
-cmake_minimum_required(VERSION 3.8.3)
-project(dsr_gazebo)
+cmake_minimum_required(VERSION 3.1.0)
+project(dsr_ros_control)
 find_package(catkin REQUIRED)
 
 catkin_package()
 
 install(
-	DIRECTORY config launch worlds
+	DIRECTORY config launch 
 	DESTINATION ${CATKIN_PACKAGE_SHARE_DESTINATION}
 )

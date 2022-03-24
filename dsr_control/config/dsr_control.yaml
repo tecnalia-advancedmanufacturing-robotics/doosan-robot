@@ -47,7 +47,7 @@ dsr_joint_velocity_controller:
 #     - joint6
 #   publish_rate: 20
 
-real_joint_trajectory_controller:
+dsr_joint_velocity_trajectory_controller:
   type: velocity_controllers/JointTrajectoryController
   joints:
     - joint1

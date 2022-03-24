@@ -1,0 +1,5 @@
+# publishes joint data to /joint_states
+dsr_joint_publisher:
+  type: joint_state_controller/JointStateController
+  publish_rate: 100
+

@@ -1,0 +1,14 @@
+<?xml version="1.0"?>
+<launch>
+
+    <arg name="mode" default="virtual"/>
+    <arg name="host" default="127.0.0.1"/>
+	<arg name="port" default="12345"/>
+	<arg name="model" default="h2515"/>
+
+    <param name="robot_description" command="$(find xacro)/xacro '$(find dsr_description)/xacro/$(arg model).urdf.xacro'
+	                           '--inorder' 'namespace:=$(arg ns)' color:=$(arg color) gripper:=$(arg gripper)"/>
+
+
+
+</launch>

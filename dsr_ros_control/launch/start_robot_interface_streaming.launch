@@ -1,0 +1,32 @@
+<?xml version="1.0"?>
+<launch>
+
+    <arg name="mode" default="virtual"/>
+    <arg name="host" default="127.0.0.1"/>
+	<arg name="port" default="12345"/>
+	<arg name="model" default="h2515"/>
+
+
+    <!-- load the doosan robot simulator when not talking to real hardware -->
+    <group if="$(eval arg('mode') == 'virtual')">         	
+      	<node name="dsr_sim" pkg="common" type="run_drcf_noetic.sh" output="screen" required="true"  args="$(arg port) $(arg model)" />
+    </group>
+    
+	<!-- load the doosan driver -->
+    <node pkg="dsr_control" type="dsr_control_node" name="dsr_control_node" respawn="false" output="screen">
+		<param name="rate" value="100" />
+		<param name="standby" value="5000" />
+		<param name="command" value="true" />
+		<param name="host" value="$(arg host)" />
+		<param name="port" value="$(arg port)"/>
+		<param name="mode" value="$(arg mode)" />
+		<param name="model" value="$(arg model)" />
+    </node>
+
+
+    <!-- load all controllers -->
+    <rosparam file="$(find dsr_ros_control)/config/controllers.yaml" command="load"/>
+    <!-- start the /joint_states streamer (joint_state_controller type)-->
+    <node name="controller_spawner_state" pkg="controller_manager" type="spawner" output="screen" args="dsr_joint_publisher">
+	</node>
+</launch>
