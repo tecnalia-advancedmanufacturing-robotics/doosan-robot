@@ -5,20 +5,14 @@
 - fixed a missing return in drflex.h
 - reduced publisher and subscriber buffering to 1 message in /command topics.
 - installed python library DSR_ROBOT so there no more relative import horrors
-- added a realtime example (untested!)
+- added a realtime example
+- roscontrol interface is real and uses RT commands (doosan FW 2.9 or greater)
 
 # bryan other notes
 - Watch out for the emulator not coming up fast enough for the driver to connect to it, get around that by running it a priori: `rosrun common run_dcrf_noetic.sh`
 - I didnt really read too hard when I converted the command to radians, so it could break other services.That's a future bryan problem.
-- Ros control interface is faked for commands:   
-  dsr_hw_interface.cpp does this on line 732:   
-  `m_sub_joint_position = private_nh_.subscribe("dsr_joint_position_controller/command", 10, &DRHWInterface::positionCallback, this);`
-
-  and of course DRHWInterface::positionCallback just calls amovej() on line 1067:   
-  `Drfl.amovej(target_pos.data(), 50, 50);`
 
 # bryan #TODOs
-- write a velocity interface using RT components.
 - tweak the RT services so that they can time out, seeing as how UDP is stateless and those commands can simply disappear into the void.
 
 # [Doosan Robotics](http://www.doosanrobotics.com/kr/)
