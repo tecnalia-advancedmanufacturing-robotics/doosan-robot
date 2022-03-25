@@ -978,12 +978,14 @@ namespace dsr_control{
 
         //open a conventional connection AND a realtime connection, so we get some niceties and the realtime control.
         //TODO: might drop the conventional connection after init is done, not sure.
-        if(Drfl.open_connection(host, nServerPort)&&Drfl.connect_rt_control(host))  //TODO: when mode virtual dont do rt connect somehow.
-        //if(Drfl.open_connection(host, nServerPort)) //dropped the udp port for testing, as the emulator doesnt emulate that part.
+        //if(Drfl.open_connection(host, nServerPort)&&Drfl.connect_rt_control(host))  //TODO: when mode virtual dont do rt connect somehow.
+        if(Drfl.open_connection(host, nServerPort)) //dropped the udp port for testing, as the emulator doesnt emulate that part.
         {
             //--- connect Emulator ? ------------------------------    
             if(host == "127.0.0.1") m_bIsEmulatorMode = true; 
             else                    m_bIsEmulatorMode = false;
+
+            if(!m_bIsEmulatorMode) Drfl.connect_rt_control(host);
 
             //--- Get version -------------------------------------            
             SYSTEM_VERSION tSysVerion = {'\0', };
