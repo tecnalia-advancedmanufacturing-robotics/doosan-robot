@@ -390,21 +390,11 @@ namespace dsr_control{
             g_stDrState.nModbusValue[i]    = pModbus->_tRegister[i]._iValue;
         }
     }
-INFO("On Monitor State");
-        switch((unsigned char)eState)
-        {
-#if 0 // TP initializing logic, Don't use in API level. (If you want to operate without TP, use this logic)
-        case eSTATE_NOT_READY:
-        if (g_bHasControlAuthority) Drfl.SetRobotControl(CONTROL_INIT_CONFIG);
-            break;
-        case eSTATE_INITIALIZING:
-            // add initalizing logic
-            if (g_bHasControlAuthority) Drfl.SetRobotControl(CONTROL_ENABLE_OPERATION);
-            break;
-#endif
-        case his function is called when the state changes.
+    void DRHWInterface::OnMonitoringStateCB(const ROBOT_STATE eState)
+    {
+        //This function is called when the state changes.
         //ROS_INFO("DRHWInterface::OnMonitoringStateCB");
-        // Only work within 50msec
+       // Only work within 50msec
         ROS_INFO("On Monitor State");
         switch((unsigned char)eState)
         {
@@ -419,7 +409,7 @@ INFO("On Monitor State");
 #endif
         case STATE_EMERGENCY_STOP:
             // popup
-            exit();
+            exit(0);
             break;
         case STATE_STANDBY:
         case STATE_MOVING:
