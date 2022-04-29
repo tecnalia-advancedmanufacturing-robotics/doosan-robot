@@ -143,7 +143,13 @@ namespace dsr_control{
             }
             ROS_INFO("[trajectory] [%02d : %.3f : %.3f] %7.3f %7.3f %7.3f %7.3f %7.3f %7.3f", i, targetTime, step_duration.toSec(), rad2deg(goal->trajectory.points[i].positions[0]), rad2deg(goal->trajectory.points[i].positions[1]), rad2deg(goal->trajectory.points[i].positions[2]), rad2deg(goal->trajectory.points[i].positions[3]), rad2deg(goal->trajectory.points[i].positions[4]), rad2deg(goal->trajectory.points[i].positions[5]));
 
+            if (step_duration.toSec()+0.25<0){
+                as_.setAborted(result_);
+                return;
+            }
             Drfl.MoveJAsync(degrees.data(), 50, 50, step_duration.toSec()+0.25, MOVE_MODE_ABSOLUTE, BLENDING_SPEED_TYPE_OVERRIDE);
+
+            ROS_INFO_STREAM("[trajectory] sleeping untill " << (begin+d));
 
             // ros::Time::sleepUntil(begin + d - ros::Duration(0.5));
             ros::Time::sleepUntil(begin + d);
