@@ -43,7 +43,12 @@ TARGET_LINK_LIBRARIES(gazebo_disable_link_plugin
   ${catkin_LIBRARIES}
   ${GAZEBO_LIBRARIES})
 
+install(PROGRAMS
+    bin/DRCF/DRCF64 bin/DRCF/run_drcf.sh
+    DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
+)
+
 install(DIRECTORY
-    bin/DRCF
+    imp bin/DRCF/config
     DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
 )
