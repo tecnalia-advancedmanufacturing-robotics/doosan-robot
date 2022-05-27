@@ -141,20 +141,19 @@ namespace dsr_control{
                 as_.setPreempted();
                 return;
             }
-            ROS_INFO("[trajectory] [%02d : %.3f : %.3f] %7.3f %7.3f %7.3f %7.3f %7.3f %7.3f", i, targetTime, step_duration.toSec(), rad2deg(goal->trajectory.points[i].positions[0]), rad2deg(goal->trajectory.points[i].positions[1]), rad2deg(goal->trajectory.points[i].positions[2]), rad2deg(goal->trajectory.points[i].positions[3]), rad2deg(goal->trajectory.points[i].positions[4]), rad2deg(goal->trajectory.points[i].positions[5]));
+            ROS_INFO("[trajectory] [%02d/%02d : %.3f : %.3f] %7.3f %7.3f %7.3f %7.3f %7.3f %7.3f", i, nCntTargetPos, targetTime, step_duration.toSec(), rad2deg(goal->trajectory.points[i].positions[0]), rad2deg(goal->trajectory.points[i].positions[1]), rad2deg(goal->trajectory.points[i].positions[2]), rad2deg(goal->trajectory.points[i].positions[3]), rad2deg(goal->trajectory.points[i].positions[4]), rad2deg(goal->trajectory.points[i].positions[5]));
 
             if (step_duration.toSec()+0.25<0){
-                as_.setAborted(result_);
-                return;
+                ROS_WARN("[trajectory] step_duration too small, skipping point");
+                continue;
             }
             Drfl.MoveJAsync(degrees.data(), 50, 50, step_duration.toSec()+0.25, MOVE_MODE_ABSOLUTE, BLENDING_SPEED_TYPE_OVERRIDE);
 
-            ROS_INFO_STREAM("[trajectory] sleeping untill " << (begin+d));
+            // ROS_INFO_STREAM("[trajectory] sleeping untill " << (begin+d));
 
             // ros::Time::sleepUntil(begin + d - ros::Duration(0.5));
             ros::Time::sleepUntil(begin + d);
         }
-        // ROS_INFO("CALLING MOVESJ");
         // Drfl.movesj(fTargetPos, nCntTargetPos, 0.0, 0.0, targetTime, (MOVE_MODE)MOVE_MODE_ABSOLUTE);
         // ROS_INFO("CALLED MOVESJ");
         /*
@@ -163,7 +162,10 @@ namespace dsr_control{
             cmd_[i] = joints[i].cmd;
         }
         */
+
+        ROS_INFO("[trajectory] mwait");
         Drfl.mwait();
+        ROS_INFO("[trajectory] setSucceeded");
         as_.setSucceeded(result_);
     }
 
@@ -401,7 +403,7 @@ namespace dsr_control{
         //This function is called when the state changes.
         //ROS_INFO("DRHWInterface::OnMonitoringStateCB");
        // Only work within 50msec
-        ROS_INFO("On Monitor State");
+        // ROS_INFO("On Monitor State");
         switch((unsigned char)eState)
         {
 #if 0 // TP initializing logic, Don't use in API level. (If you want to operate without TP, use this logic)
@@ -448,7 +450,7 @@ namespace dsr_control{
             break;
         }
 
-        cout << "[callback OnMonitoringStateCB] current state: " << GetRobotStateString((int)eState) << endl;
+        // cout << "[callback OnMonitoringStateCB] current state: " << GetRobotStateString((int)eState) << endl;
         g_stDrState.nRobotState = (int)eState;
         strncpy(g_stDrState.strRobotState, GetRobotStateString((int)eState), MAX_SYMBOL_SIZE);
     }
