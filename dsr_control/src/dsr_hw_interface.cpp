@@ -108,11 +108,11 @@ namespace dsr_control{
         for (int i = 0; i < nCntTargetPos; i++) //=10
         {
             std::array<float, NUM_JOINT> degrees;
-            ros::Duration d(goal->trajectory.points[i].time_from_start);
+            ros::Duration time_from_start(goal->trajectory.points[i].time_from_start);
 
             // ROS_INFO("  goal->trajectory.points[%d].time_from_start = %7.3%f",i,(float)goal->trajectory.points[i].time_from_start );
 
-            targetTime = d.toSec();
+            targetTime = time_from_start.toSec();
             /// ROS_INFO("[trajectory] preTargetTime: %7.3f", preTargetTime);
             /// targetTime = targetTime - preTargetTime;
             /// preTargetTime = targetTime;
@@ -131,7 +131,7 @@ namespace dsr_control{
                 fTargetPos[i][j] = degrees[j];
             }
 
-            ros::Duration step_duration = d - (ros::Time::now() - begin);
+            ros::Duration step_duration = time_from_start - (ros::Time::now() - begin);
             float blending_radius = 50;
 
             if (as_.isPreemptRequested() || !ros::ok())
@@ -143,16 +143,13 @@ namespace dsr_control{
             }
             ROS_INFO("[trajectory] [%02d/%02d : %.3f : %.3f] %7.3f %7.3f %7.3f %7.3f %7.3f %7.3f", i, nCntTargetPos, targetTime, step_duration.toSec(), rad2deg(goal->trajectory.points[i].positions[0]), rad2deg(goal->trajectory.points[i].positions[1]), rad2deg(goal->trajectory.points[i].positions[2]), rad2deg(goal->trajectory.points[i].positions[3]), rad2deg(goal->trajectory.points[i].positions[4]), rad2deg(goal->trajectory.points[i].positions[5]));
 
-            if (step_duration.toSec()+0.25<0){
+            if (step_duration.toSec()<0){
                 ROS_WARN("[trajectory] step_duration too small, skipping point");
                 continue;
             }
-            Drfl.MoveJAsync(degrees.data(), 50, 50, step_duration.toSec()+0.25, MOVE_MODE_ABSOLUTE, BLENDING_SPEED_TYPE_OVERRIDE);
+            Drfl.MoveJAsync(degrees.data(), 50, 50, step_duration.toSec(), MOVE_MODE_ABSOLUTE, BLENDING_SPEED_TYPE_OVERRIDE);
 
-            // ROS_INFO_STREAM("[trajectory] sleeping untill " << (begin+d));
-
-            // ros::Time::sleepUntil(begin + d - ros::Duration(0.5));
-            ros::Time::sleepUntil(begin + d);
+            ros::Time::sleepUntil(begin + time_from_start - ros::Duration(0.25));
         }
         // Drfl.movesj(fTargetPos, nCntTargetPos, 0.0, 0.0, targetTime, (MOVE_MODE)MOVE_MODE_ABSOLUTE);
         // ROS_INFO("CALLED MOVESJ");
