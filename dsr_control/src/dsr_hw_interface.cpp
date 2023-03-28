@@ -141,7 +141,7 @@ namespace dsr_control{
                 as_.setPreempted();
                 return;
             }
-            ROS_INFO("[trajectory] [%02d : %.3f : %.3f] %7.3f %7.3f %7.3f %7.3f %7.3f %7.3f", i, targetTime, step_duration.toSec(), rad2deg(goal->trajectory.points[i].positions[0]), rad2deg(goal->trajectory.points[i].positions[1]), rad2deg(goal->trajectory.points[i].positions[2]), rad2deg(goal->trajectory.points[i].positions[3]), rad2deg(goal->trajectory.points[i].positions[4]), rad2deg(goal->trajectory.points[i].positions[5]));
+            ROS_DEBUG("[trajectory] [%02d : %.3f : %.3f] %7.3f %7.3f %7.3f %7.3f %7.3f %7.3f", i, targetTime, step_duration.toSec(), rad2deg(goal->trajectory.points[i].positions[0]), rad2deg(goal->trajectory.points[i].positions[1]), rad2deg(goal->trajectory.points[i].positions[2]), rad2deg(goal->trajectory.points[i].positions[3]), rad2deg(goal->trajectory.points[i].positions[4]), rad2deg(goal->trajectory.points[i].positions[5]));
 
             Drfl.MoveJAsync(degrees.data(), 50, 50, step_duration.toSec()+0.25, MOVE_MODE_ABSOLUTE, BLENDING_SPEED_TYPE_OVERRIDE);
 
@@ -396,7 +396,7 @@ namespace dsr_control{
         //This function is called when the state changes.
         //ROS_INFO("DRHWInterface::OnMonitoringStateCB");
         // Only work within 50msec
-        ROS_INFO("On Monitor State");
+        ROS_DEBUG("On Monitor State");
         switch((unsigned char)eState)
         {
 #if 0 // TP initializing logic, Don't use in API level. (If you want to operate without TP, use this logic)
@@ -442,7 +442,7 @@ namespace dsr_control{
             break;
         }
 
-        cout << "[callback OnMonitoringStateCB] current state: " << GetRobotStateString((int)eState) << endl;
+        ROS_DEBUG_STREAM("[callback OnMonitoringStateCB] current state: " << GetRobotStateString((int)eState));
         g_stDrState.nRobotState = (int)eState;
         strncpy(g_stDrState.strRobotState, GetRobotStateString((int)eState), MAX_SYMBOL_SIZE);
     }
